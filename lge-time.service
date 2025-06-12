@@ -1,0 +1,33 @@
+[Unit]
+Description=LGE Time Daemon
+Documentation=https://github.com/lge/lge-time-daemon
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lge-time
+Restart=always
+RestartSec=5
+User=root
+Group=root
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=false
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lge-time
+
+[Install]
+WantedBy=multi-user.target

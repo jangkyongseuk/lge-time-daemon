@@ -1,0 +1,59 @@
+@startuml LGE Time Daemon Class Diagram
+
+!define RECTANGLE class
+
+title LGE Time Daemon - Class Diagram
+
+RECTANGLE LgeTimeLib {
+    - {static} RTC_DEVICE : string = "/dev/rtc0"
+    - {static} DEFAULT_DATETIME : string = "2024-01-01 00:00:00"
+    - {static} NORMAL_SLEEP_INTERVAL : int = 60
+    - {static} FAST_SLEEP_INTERVAL : int = 5
+    - old_time : string
+    - sleep_interval : int
+    - running : bool
+    
+    + LgeTimeLib()
+    + ~LgeTimeLib()
+    + readRtcTime() : string
+    + validateDatetime(datetime : string) : bool
+    + setSystemTime(datetime : string) : bool
+    + run() : void
+    + stop() : void
+    + getSleepInterval() : int
+    + getOldTime() : string
+    + isRunning() : bool
+    + setSleepInterval(interval : int) : void
+    + setOldTime(time : string) : void
+    + {static} getRtcDevice() : string
+    + {static} getDefaultDatetime() : string
+    + {static} getNormalSleepInterval() : int
+    + {static} getFastSleepInterval() : int
+}
+
+RECTANGLE LgeTimeDaemon {
+    - {static} g_daemon : LgeTimeDaemon*
+    - daemon : LgeTimeLib
+    
+    + main() : int
+    + {static} signalHandler(signal : int) : void
+}
+
+note right of LgeTimeLib
+  Main library class that handles:
+  - RTC device reading
+  - Time validation
+  - System time setting
+  - Daemon loop management
+end note
+
+note right of LgeTimeDaemon
+  Main executable wrapper that:
+  - Handles signal processing
+  - Manages daemon lifecycle
+  - Provides entry point
+end note
+
+LgeTimeDaemon --> LgeTimeLib : uses
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml LGE Time Daemon Sequence Diagram
+
+title LGE Time Daemon - Main Loop Sequence
+
+actor "System" as sys
+participant "main()" as main
+participant "LgeTimeDaemon" as daemon
+participant "LgeTimeLib" as lib
+participant "RTC Device" as rtc
+participant "System Time" as systime
+participant "Syslog" as log
+
+sys -> main : Start daemon
+main -> daemon : Create instance
+daemon -> lib : Create LgeTimeLib
+lib -> log : openlog("lge-time")
+log -> lib : OK
+
+main -> daemon : Setup signal handlers
+main -> daemon : daemon.run()
+daemon -> lib : run()
+
+loop Main Daemon Loop
+    lib -> rtc : readRtcTime()
+    alt RTC device accessible
+        rtc -> lib : current_time
+    else RTC device not accessible
+        rtc -> lib : DEFAULT_DATETIME
+        lib -> log : LOG_ERR "Failed to open RTC device"
+    end
+    
+    lib -> lib : validateDatetime(current_time)
+    alt Valid datetime format
+        lib -> lib : Compare with old_time
+        alt Time changed
+            lib -> systime : setSystemTime(current_time)
+            alt System time set successfully
+                systime -> lib : Success
+                lib -> lib : old_time = current_time
+                lib -> lib : sleep_interval = FAST_SLEEP_INTERVAL
+                lib -> log : LOG_INFO "System time updated"
+            else System time set failed
+                systime -> lib : Error
+                lib -> log : LOG_ERR "Failed to set system time"
+            end
+        else Time unchanged
+            lib -> lib : sleep_interval = NORMAL_SLEEP_INTERVAL
+        end
+    else Invalid datetime format
+        lib -> log : LOG_ERR "Invalid datetime format"
+    end
+    
+    lib -> lib : sleep(sleep_interval)
+end
+
+sys -> main : SIGTERM/SIGINT
+main -> daemon : signalHandler()
+daemon -> lib : stop()
+lib -> lib : running = false
+lib -> log : LOG_INFO "Daemon stopped"
+lib -> log : closelog()
+
+@enduml
