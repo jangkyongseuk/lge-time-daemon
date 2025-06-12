@@ -31,7 +31,7 @@ if(NOT GTest_FOUND)
     include(FetchContent)
     FetchContent_Declare(
         googletest
-        URL https://github.com/google/googletest/archive/03597a01ee50f33f9142a332e68d798fb783c611.zip
+        URL https://github.com/google/googletest/archive/v1.14.0.zip
     )
     FetchContent_MakeAvailable(googletest)
 endif()

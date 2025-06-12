@@ -38,8 +38,40 @@ std::string LgeTimeLib::readRtcTime() {
 }
 
 bool LgeTimeLib::validateDatetime(const std::string& datetime) {
-    std::regex datetime_pattern(R"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})");
-    return std::regex_match(datetime, datetime_pattern);
+    static const std::regex datetime_pattern(R"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})");
+    
+    if (!std::regex_match(datetime, datetime_pattern)) {
+        return false;
+    }
+    
+    struct tm tm_time = {};
+    if (strptime(datetime.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) == nullptr) {
+        return false;
+    }
+    
+    int year = tm_time.tm_year + 1900;
+    int month = tm_time.tm_mon + 1;
+    int day = tm_time.tm_mday;
+    int hour = tm_time.tm_hour;
+    int minute = tm_time.tm_min;
+    int second = tm_time.tm_sec;
+    
+    if (year < 1900 || year > 3000) return false;
+    if (month < 1 || month > 12) return false;
+    if (hour < 0 || hour > 23) return false;
+    if (minute < 0 || minute > 59) return false;
+    if (second < 0 || second > 59) return false;
+    
+    int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    
+    bool is_leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    if (is_leap && month == 2) {
+        days_in_month[1] = 29;
+    }
+    
+    if (day < 1 || day > days_in_month[month - 1]) return false;
+    
+    return true;
 }
 
 bool LgeTimeLib::setSystemTime(const std::string& datetime) {
